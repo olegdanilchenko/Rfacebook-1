@@ -2,3 +2,18 @@
    - Initial release on GitHub (a few functions still missing)
 2013-11-15 - version 0.2:
     - Initial release on CRAN
+2013-11-26 - version 0.2.1:
+    - Added 'link' argument to updateStatus 
+    - Fixed typos in documentation
+    - Now getFriends returns also locale of friends
+2013-12-10 - version 0.2.2:
+    - Added 'getCheckins' function
+    - Fixed error in parsing getPost output
+    - Fixed error with getPost when n>200 and n<500
+2013-12-21 - version 0.2.3:
+    - Added 'getLikes' and 'getNewsfeed' functions
+2013-12-30 - version 0.2.4:
+    - 'getPost' now has separate n.likes and n.comments
+2014-01-05 - version 0.3:
+    - Updated documentation
+    - CRAN release

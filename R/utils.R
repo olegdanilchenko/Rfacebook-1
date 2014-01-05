@@ -14,6 +14,24 @@ searchDataToDF <- function(json){
 	return(df)
 }
 
+newsDataToDF <- function(json){
+	df <- data.frame(
+		from_id = unlistWithNA(json, c('from', 'id')),
+		from_name = unlistWithNA(json, c('from', 'name')),
+		to_id = unlistWithNA(json, c('to', 'data', "1", 'id')),
+		to_name = unlistWithNA(json, c('to', 'data', '1', 'name')),
+		message = unlistWithNA(json, 'message'),
+		created_time = unlistWithNA(json, 'created_time'),
+		type = unlistWithNA(json, 'type'),
+		link = unlistWithNA(json, 'link'),
+		id = unlistWithNA(json, 'id'),
+		likes_count = unlistWithNA(json, c('likes', 'summary', 'total_count')),
+		comments_count = unlistWithNA(json, c('comments', 'summary', 'total_count')),
+		shares_count = unlistWithNA(json, c('shares', 'count')),
+		stringsAsFactors=F)
+	return(df)
+}
+
 pageDataToDF <- function(json){
 	df <- data.frame(
 		from_id = unlistWithNA(json, c('from', 'id')),
@@ -37,7 +55,7 @@ postDataToDF <- function(json){
 		message = ifelse(!is.null(json$message),json$message, NA),
 		created_time = json$created_time,
 		type = json$type,
-		link = json$link,
+		link = ifelse(!is.null(json$link), json$link, NA),
 		id = json$id,
 		likes_count = ifelse(!is.null(json$likes$summary$total_count),
 			json$likes$summary$total_count, 0),
@@ -103,6 +121,49 @@ userDataToDF <- function(user_data, private_info){
 	return(df)
 }
 
+checkinDataToDF <- function(checkin_data){
+	df <- data.frame(
+		checkin_time = unlistWithNA(checkin_data, 'created_time'),
+		place_id = unlistWithNA(checkin_data, c('place', 'id')),
+		place_name = unlistWithNA(checkin_data, c('place', 'name')),
+		place_city = unlistWithNA(checkin_data, c('place', 'location','city')),
+		place_state = unlistWithNA(checkin_data, c('place', 'location','state')),
+		place_country = unlistWithNA(checkin_data, c('place', 'location','country')),
+		place_lat = unlistWithNA(checkin_data, c('place', 'location', 'latitude')),
+		place_long = unlistWithNA(checkin_data, c('place', 'location', 'longitude')),
+		stringsAsFactors=F)
+	return(df)
+}
+
+userLikesToDF <- function(user_likes){
+	df <- data.frame(
+		id = unlistWithNA(user_likes, 'id'),
+		names = unlistWithNA(user_likes, 'name'),
+		website = unlistWithNA(user_likes, 'website'),
+		stringsAsFactors=F)
+	return(df)
+}
+
+
+tagsDataToDF <- function(tags){
+    tags <- lapply(tags[[2]]$data, '[[', "tags")
+    tags <- lapply(tags, '[[', 'data')
+    tagsListToDF <- function(x){
+    	if (!is.null(x)){
+    	    values <- data.frame(matrix(unlist(x),ncol=2,byrow=TRUE),
+    	    	stringsAsFactors=F)
+    		names(values) <- c("id", "name")	
+    	}
+    	if (is.null(x)){
+    		values <- NULL
+    	}
+    	return(values)
+    }
+    tags <- lapply(tags, tagsListToDF)
+    return(tags)
+}
+
+
 unlistWithNA <- function(lst, field){
 	if (length(field)==1){
 		notnulls <- unlist(lapply(lst, function(x) !is.null(x[[field]])))
@@ -120,9 +181,18 @@ unlistWithNA <- function(lst, field){
 		vect[notnulls] <- unlist(lapply(lst, function(x) x[[field[1]]][[field[2]]]))
 	}
 	if (length(field)==3){
-		notnulls <- unlist(lapply(lst, function(x) !is.null(x[[field[1]]][[field[2]]][[field[3]]])))
+		notnulls <- unlist(lapply(lst, function(x) 
+			tryCatch(!is.null(x[[field[1]]][[field[2]]][[field[3]]]), 
+				error=function(e) FALSE)))
 		vect <- rep(NA, length(lst))
-		vect[notnulls] <- unlist(lapply(lst, function(x) x[[field[1]]][[field[2]]][[field[3]]]))
+		vect[notnulls] <- unlist(lapply(lst[notnulls], function(x) x[[field[1]]][[field[2]]][[field[3]]]))
+	}
+	if (length(field)==4 & field[1]=="to"){
+		notnulls <- unlist(lapply(lst, function(x) 
+			tryCatch(!is.null(x[[field[1]]][[field[2]]][[as.numeric(field[3])]][[field[4]]]), 
+				error=function(e) FALSE)))
+		vect <- rep(NA, length(lst))
+		vect[notnulls] <- unlist(lapply(lst[notnulls], function(x) x[[field[1]]][[field[2]]][[as.numeric(field[3])]][[field[4]]]))
 	}
 	if (field[1] %in% c("comments", "likes") & !is.na(field[2])){
 		notnulls <- unlist(lapply(lst, function(x) !is.null(x[[field[1]]][[field[2]]][[field[3]]])))
