@@ -22,20 +22,31 @@
 #' @param n Number of posts of page to return. Note that number can be sometimes
 #' higher or lower, depending on status of API.
 #'
+#' @param feed If \code{TRUE}, the function will also return posts on the page
+#' that were made by others (not only the admin of the page).
+#'
 #'
 #' @examples \dontrun{
 #' ## See examples for fbOAuth to know how token was created.
 #' ## Getting information about Facebook's Facebook Page
 #'	load("fb_oauth")
-#'	fb_page <- getPage(users="facebook", token=fb_oauth)
+#'	fb_page <- getPage(page="facebook", token=fb_oauth)
+#' ## Getting posts on Humans of New York page, including posts by others users
+#' ## (not only owner of page)
+#'  page <- getPage(page="humansofnewyork", token=fb_oauth, feed=TRUE)
 #' }
 #'
 
-getPage <- function(page, token, n=100){
+getPage <- function(page, token, n=100, feed=FALSE){
 
 	url <- paste0('https://graph.facebook.com/', page,
 		'/posts?fields=from,message,created_time,type,link,comments.summary(true)',
 		',likes.summary(true),shares&limit=')
+	if (feed){
+		url <- paste0('https://graph.facebook.com/', page,
+		'/feed?fields=from,message,created_time,type,link,comments.summary(true)',
+		',likes.summary(true),shares&limit=')
+	}
 	if (n<=100){
 		url <- paste(url, n, sep="")
 	}

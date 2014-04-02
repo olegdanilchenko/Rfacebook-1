@@ -17,3 +17,14 @@
 2014-01-05 - version 0.3:
     - Updated documentation
     - CRAN release
+2014-01-05 - version 0.3.1:
+    - Fixed errors in getPost when existing likes are fewer than request
+    - Fixed error in how likes are converted into a data frame
+2014-02-07 - version 0.3.2:
+    - Fixed errors in getPost when there few likes/comments
+2014-02-20 - version 0.3.3:
+    - Added searchPages function (thanks Joel Gombin!)
+2014-03-11 - version 0.3.4:
+    - Now compatible with httr 0.3
+2014-04-02 - version 0.4.0:
+    - Added function to execute FQL queries

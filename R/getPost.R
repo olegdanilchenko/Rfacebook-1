@@ -102,20 +102,24 @@ getPost <- function(post, token, n=500, comments=TRUE, likes=TRUE, n.likes=n,
 	# putting it together
 	out <- list()
 	out[["post"]] <- postDataToDF(content)
-	if (likes) out[["likes"]] <- likesDataToDF(content$likes$data)
-	if (likes) n.l <- dim(out$likes)[1]
+	if (likes && n.likes > 0) out[["likes"]] <- likesDataToDF(content$likes$data)
+	if (likes && n.likes > 0) n.l <- ifelse(!is.null(out$likes), dim(out$likes)[1], 0)
+	if (n.likes == 0) n.l <- 0
 	if (!likes) n.l <- Inf
-	if (comments) out[["comments"]] <- commentsDataToDF(content$comments$data)
-	if (comments) n.c <- dim(out$comments)[1]
+	if (comments && n.likes > 0) out[["comments"]] <- commentsDataToDF(content$comments$data)
+	if (comments && n.likes > 0) n.c <- ifelse(!is.null(out$comments), dim(out$comments)[1], 0)
+	if (n.comments == 0) n.c <- 0
 	if (!comments) n.c <- Inf
 	
 	# paging if we n.comments OR n.likes haven't been downloaded
 	if (n.likes > n.l || n.comments > n.c){
 		# saving URLs for next batch of likes and comments
 		if (likes) url.likes <- content$likes$paging$`next`
+		if (!likes) url.likes <- NULL
 		if (comments) url.comments <- content$comments$paging$`next`
+		if (!comments) url.comments <- NULL
 
-		if (likes && n.likes > n.l){
+		if (!is.null(url.likes) && likes && n.likes > n.l){
 			# retrieving next batch of likes
 			url <- content$likes$paging$`next`
 			content <- callAPI(url=url.likes, token=token)
@@ -132,7 +136,7 @@ getPost <- function(post, token, n=500, comments=TRUE, likes=TRUE, n.likes=n,
 				n.l <- dim(out$likes)[1]
 			}
 		}
-		if (comments && n.comments > n.c){
+		if (!is.null(url.comments) && comments && n.comments > n.c){
 			# retriving next batch of comments
 			content <- callAPI(url=url.comments, token=token)
 			out[["comments"]] <- rbind(out[["comments"]],

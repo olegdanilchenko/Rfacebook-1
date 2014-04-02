@@ -68,15 +68,21 @@ postDataToDF <- function(json){
 }
 
 likesDataToDF <- function(json){
-	mat <- matrix(unlist(json), 
-		ncol=2, byrow=TRUE)
-	df <- data.frame(mat, stringsAsFactors=F)
-	names(df) <- c("from_name", "from_id")
+	if (!is.null(json)){
+		df <- data.frame(
+			from_name = unlistWithNA(json, "name"),
+			from_id = unlistWithNA(json, "id"),
+			stringsAsFactors=F
+			)
+	}
+	if (length(json)==0){
+		df <- NULL
+	}
 	return(df)
 }
 
 commentsDataToDF <- function(json){
-	if (length(json)>1){
+	if (!is.null(json)){
 		df <- data.frame(
 			from_id = unlistWithNA(json, c('from', 'id')),
 			from_name = unlistWithNA(json, c('from', 'name')),
@@ -86,15 +92,8 @@ commentsDataToDF <- function(json){
 			id = unlistWithNA(json, 'id'),
 		stringsAsFactors=F)
 	}
-	if (length(json)==1){
-		df <- data.frame(
-			from_id = json$from$id,
-			from_name = json$from$name,
-			message = json$message,
-			created_time = json$created_time,
-			likes_count = json$like_count,
-			id = json$id,
-		stringsAsFactors=F)
+	if (is.null(json)){
+		df <- NULL
 	}
 	return(df)
 }
@@ -202,15 +201,36 @@ unlistWithNA <- function(lst, field){
 	return(vect)
 }
 
+searchPageDataToDF <- function(json){
+  df <- data.frame(
+    id = unlistWithNA(json, 'id'),
+    about = unlistWithNA(json, 'about'),
+    category = unlistWithNA(json, 'category'),
+    description = unlistWithNA(json, 'description'),
+    general_info = unlistWithNA(json, 'general_info'),
+    likes = unlistWithNA(json, 'likes'),
+    link = unlistWithNA(json, 'link'),
+    #    location = unlistWithNA(json, 'location'),
+    name = unlistWithNA(json, 'name'),
+    talking_about_count = unlistWithNA(json, 'talking_about_count'),
+    username = unlistWithNA(json, 'username'),
+    website = unlistWithNA(json, 'website'),
+    stringsAsFactors=F)
+  return(df)
+}
+
 callAPI <- function(url, token){
 	if (class(token)=="config"){
 		url.data <- GET(url, config=token)
 	}
+	if (class(token)=="Token2.0"){
+		url.data <- GET(url, config(token=token))
+	}	
 	if (class(token)=="character"){
 		url <- paste0(url, "&access_token=", token)
 		url.data <- GET(url)
 	}
-	if (class(token)!="character" & class(token)!="config"){
+	if (class(token)!="character" & class(token)!="config" & class(token)!="Token2.0"){
 		stop("Error in access token. See help for details.")
 	}
 	content <- fromJSON(rawToChar(url.data$content))
